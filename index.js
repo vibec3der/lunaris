@@ -24,9 +24,9 @@ const { ScramjetController } = $scramjetLoadController();
 
 const scramjet = new ScramjetController({
 	files: {
-		wasm: "/scram/scramjet.wasm.wasm",
-		all: "/scram/scramjet.all.js",
-		sync: "/scram/scramjet.sync.js",
+		wasm: "/proxy/scram/scramjet.wasm.wasm",
+		all: "/proxy/scram/scramjet.all.js",
+		sync: "/proxy/scram/scramjet.sync.js",
 	},
 });
 
@@ -53,8 +53,8 @@ form.addEventListener("submit", async (event) => {
 	const url = search(address.value, searchEngine.value);
 
 	let wispUrl = localStorage.getItem("wispUrl");
-	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-		await connection.setTransport("/libcurl/index.mjs", [
+	if ((await connection.getTransport()) !== "/proxy/libcurl/index.mjs") {
+		await connection.setTransport("/proxy/libcurl/index.mjs", [
 			{ websocket: wispUrl },
 		]);
 	}
