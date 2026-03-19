@@ -26,14 +26,9 @@
 			</div>
 		</div>
 		<div class="footer">
-			<a href="#" onclick="navigate('/')">main page</a>&nbsp;&nbsp;&nbsp;
-			<a href="#" onclick="navigate('credits.html')">credits</a>&nbsp;&nbsp;&nbsp;
-			<a href="#" onclick="navigate('settings.html')">settings</a>
+			<a href="/">main page</a>&nbsp;&nbsp;&nbsp;
+			<a href="credits.html">credits</a>&nbsp;&nbsp;&nbsp;
+			<a href="settings.html">settings</a>
 		</div>
-		<script>
-		function navigate(href) {
-			window.parent.postMessage({ type: "internal-navigate", href }, "*");
-		}
-		</script>
 	</body>
 </html>
