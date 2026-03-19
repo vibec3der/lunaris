@@ -32,7 +32,7 @@ const scramjet = new ScramjetController({
 
 scramjet.init();
 
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+const connection = new BareMux.BareMuxConnection("/proxy/baremux/worker.js");
 
 form.addEventListener("submit", async (event) => {
 	event.preventDefault();
