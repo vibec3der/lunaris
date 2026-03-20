@@ -48,6 +48,11 @@
 			if (!localStorage.getItem("wispUrl")) {
 				localStorage.setItem("wispUrl", "wss://gointospace.app/wisp/");
 			}
+
+			const transport = localStorage.getItem("transport");
+			if (transport !== "epoxy" && transport !== "libcurl") {
+				localStorage.setItem("transport", "libcurl");
+			}
 		</script>
 	</body>
 </html>

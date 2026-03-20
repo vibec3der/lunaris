@@ -39,7 +39,7 @@ form.addEventListener("submit", async (event) => {
 
 	form.classList.add("top-search");
 
-	const input = form.querySelector("input[type='text']");
+					  const input = form.querySelector("input[type='text']");
 	input.classList.add("active");
 
 	try {
@@ -53,23 +53,38 @@ form.addEventListener("submit", async (event) => {
 	const url = search(address.value, searchEngine.value);
 
 	let wispUrl = localStorage.getItem("wispUrl");
-	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-		await connection.setTransport("/libcurl/index.mjs", [
-			{ websocket: wispUrl },
-		]);
+	let transportType = localStorage.getItem("transport");
+
+	if (transportType !== "epoxy" && transportType !== "libcurl") {
+		transportType = "libcurl";
+		localStorage.setItem("transport", transportType);
+	}
+
+	let transportPath;
+	let transportConfig;
+
+	if (transportType === "epoxy") {
+		transportPath = "/epoxy/index.mjs";
+		transportConfig = [{ wisp: wispUrl }];
+	} else {
+		transportPath = "/libcurl/index.mjs";
+		transportConfig = [{ websocket: wispUrl }];
+	}
+
+	if ((await connection.getTransport()) !== transportPath) {
+		await connection.setTransport(transportPath, transportConfig);
 	}
 
 	const oldFrame = document.getElementById("sj-frame");
 
+	const frame = scramjet.createFrame();
+	frame.frame.id = "sj-frame";
+
 	if (oldFrame) {
-		const frame = scramjet.createFrame();
-		frame.frame.id = "sj-frame";
 		document.body.replaceChild(frame.frame, oldFrame);
-		frame.go(url);
 	} else {
-		const frame = scramjet.createFrame();
-		frame.frame.id = "sj-frame";
 		document.body.appendChild(frame.frame);
-		frame.go(url);
 	}
+
+	frame.go(url);
 });
