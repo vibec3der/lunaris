@@ -82,7 +82,7 @@ input[type=submit] {
 }
 
 .footer {
-  position: fixed;
+  position: absolute;
   bottom: 10px;
   right: 10px;
 }
