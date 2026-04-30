@@ -80,8 +80,8 @@
 			addressInput.placeholder = savedWisp;
 
 			let savedTransport = localStorage.getItem("transport");
-			if (savedTransport !== "epoxy" && savedTransport !== "libcurl") {
-				savedTransport = "libcurl";
+			if (savedTransport !== "libcurl" && savedTransport !== "epoxy") {
+				savedTransport = "epoxy";
 				localStorage.setItem("transport", savedTransport);
 			}
 
