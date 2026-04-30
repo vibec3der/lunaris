@@ -618,7 +618,7 @@ function clearError() {
 
 function showProxyLoader(target) {
 	loaderStartedAt = performance.now();
-	loaderTarget.textContent = target ? `Lunaris is searching for your course.. ${target}` : "Preparing Lunaris";
+	loaderTarget.textContent = target ? "Lunaris is searching for your course.. (sorry for slop loading)" : "Preparing..";
 	proxyLoader.hidden = false;
 	clearTimeout(loaderTimer);
 	loaderTimer = setTimeout(hideProxyLoader, 12000);
