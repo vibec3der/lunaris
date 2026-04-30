@@ -1,0 +1,116 @@
+:root {
+	--bg: #1b1b2a;
+	--panel: #25253b;
+	--panel-hover: #2f304b;
+	--line: #42445c;
+	--text: #edf1ff;
+	--muted: #aab4df;
+	--accent: #4f8cff;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select {
+	font: inherit;
+}
+
+.page {
+	width: min(980px, calc(100% - 40px));
+	margin: 0 auto;
+	padding: 48px 0;
+}
+
+.page-heading {
+	margin-bottom: 24px;
+}
+
+.eyebrow {
+	margin: 0 0 8px;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+h1 {
+	margin: 0;
+	font-size: 36px;
+	line-height: 1.1;
+	letter-spacing: 0;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 12px;
+}
+
+.tile {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 72px;
+	padding: 0 18px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel);
+	color: var(--text);
+	cursor: pointer;
+	text-align: left;
+}
+
+.tile:hover {
+	background: var(--panel-hover);
+	border-color: var(--accent);
+}
+
+.tile svg {
+	width: 24px;
+	height: 24px;
+	color: var(--muted);
+	stroke-width: 2.35;
+}
+
+.settings-panel,
+.credit-panel {
+	display: grid;
+	gap: 18px;
+	max-width: 560px;
+}
+
+.field {
+	display: grid;
+	gap: 8px;
+	color: var(--muted);
+}
+
+input,
+select {
+	width: 100%;
+	height: 46px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	outline: none;
+	background: var(--panel);
+	color: var(--text);
+	padding: 0 14px;
+}
+
+input:focus,
+select:focus {
+	border-color: var(--accent);
+}
+
+a {
+	color: var(--muted);
+}
