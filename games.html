@@ -6,41 +6,162 @@
 		<title>Lunaris | Games</title>
 
 		<style>
-			body {
-				margin: 0;
-				font-family: system-ui, sans-serif;
-				background: #0b0b0b;
-				color: white;
+			/* --- THEME VARIABLES & CURSOR --- */
+			:root {
+				--bg: #1b1b2a;
+				--bar: #202034;
+				--bar-strong: #25253b;
+				--field: #33334b;
+				--field-focus: #26263d;
+				--line: #3c3c52;
+				--text: #edf1ff;
+				--muted: #aab4df;
+				--dim: #6f7693;
+				--accent: #4f8cff;
+				--accent-soft: #b9c5ff;
+				--danger: #ff7d8d;
+				--cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M3 2 31 19.8c2.1 1.3 1.2 4.5-1.3 4.5H17.1l-6.4 7.9c-1.5 1.8-4.4.8-4.4-1.6V6.5C6.3 4 4.8 2.9 3 2Z' fill='white'/%3E%3Cpath d='M8.2 7.5v21.8l7.6-9.3h13.1L8.2 7.5Z' fill='black'/%3E%3C/svg%3E") 3 2, auto;
 			}
 
+			body[data-theme="midnight"] {
+				--bg: #050508;
+				--bar: #0b0b10;
+				--bar-strong: #13131a;
+				--field: #171722;
+				--field-focus: #101018;
+				--line: #292936;
+				--text: #f4f6ff;
+				--muted: #9da8c9;
+				--dim: #616982;
+				--accent: #8aa7ff;
+				--accent-soft: #c6d1ff;
+			}
+
+			body[data-theme="aurora"] {
+				--bg: #111827;
+				--bar: #162033;
+				--bar-strong: #1f2a44;
+				--field: #24334f;
+				--field-focus: #19243a;
+				--line: #35506e;
+				--text: #eff7ff;
+				--muted: #a9c7db;
+				--dim: #728ea3;
+				--accent: #55d6be;
+				--accent-soft: #b6f4e8;
+			}
+
+			body[data-theme="ember"] {
+				--bg: #21181f;
+				--bar: #271b25;
+				--bar-strong: #33232f;
+				--field: #3a2a35;
+				--field-focus: #2a1e27;
+				--line: #51404d;
+				--text: #fff1f8;
+				--muted: #e3b6c9;
+				--dim: #9b7788;
+				--accent: #ff7d8d;
+				--accent-soft: #ffc1cb;
+			}
+
+			/* --- BASE STYLES --- */
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+			}
+
+			body {
+				margin: 0;
+				overflow-y: auto; /* Allows scrolling on the games page */
+				background: var(--bg);
+				color: var(--text);
+				font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				cursor: var(--cursor);
+			}
+
+			button,
+			input {
+				font: inherit;
+			}
+
+			button {
+				border: 0;
+				color: inherit;
+				cursor: var(--cursor);
+			}
+
+			input,
+			select,
+			textarea {
+				cursor: var(--cursor);
+			}
+
+			/* --- GAMES PAGE LAYOUT --- */
 			.page {
-				padding: 20px;
+				padding: 24px;
+			}
+
+			.page-heading {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 24px;
 			}
 
 			.page-heading h1 {
-				margin: 0 0 20px 0;
+				margin: 0;
+				font-size: 32px;
+				color: var(--text);
+			}
+
+			#searchBar {
+				padding: 10px 16px;
+				border-radius: 20px;
+				border: 1px solid var(--line);
+				background: var(--field);
+				color: var(--text);
+				outline: none;
+				font-size: 14px;
+				transition: 0.2s;
+				width: 100%;
+				max-width: 250px;
+			}
+
+			#searchBar:focus {
+				border-color: var(--accent);
+				background: var(--field-focus);
+				box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.24);
+			}
+
+			#searchBar::placeholder {
+				color: var(--dim);
 			}
 
 			.grid {
 				display: grid;
 				grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-				gap: 12px;
+				gap: 14px;
 			}
 
 			.tile {
-				border: none;
-				background: #161616;
+				background: var(--bar-strong);
+				border: 1px solid transparent;
 				border-radius: 12px;
 				padding: 10px;
-				cursor: pointer;
-				color: white;
 				text-align: left;
 				transition: 0.15s;
 			}
 
 			.tile:hover {
 				transform: scale(1.02);
-				background: #222;
+				background: var(--field);
+				border-color: var(--line);
 			}
 
 			.tile img {
@@ -50,7 +171,7 @@
 				border-radius: 8px;
 				display: block;
 				margin-bottom: 8px;
-				background: #111;
+				background: var(--bar);
 			}
 
 			.tile span {
@@ -59,28 +180,33 @@
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
+				color: var(--muted);
+				transition: color 0.15s;
 			}
 
-			/* OVERLAY */
+			.tile:hover span {
+				color: var(--text);
+			}
+
+			/* --- OVERLAY --- */
 			#overlay {
 				position: fixed;
 				inset: 0;
-				background: rgba(0, 0, 0, 0.95);
+				background: color-mix(in srgb, var(--bg) 90%, transparent);
+				backdrop-filter: blur(4px);
 				display: none;
 				z-index: 9999;
 			}
 
-			/* FULLSCREEN IFRAME */
 			#frame {
 				position: absolute;
 				inset: 0;
 				width: 100%;
 				height: 100%;
 				border: none;
-				background: black;
+				background: var(--bg);
 			}
 
-			/* FLOATING CLOSE BUTTON */
 			#close {
 				position: absolute;
 				top: 12px;
@@ -89,25 +215,30 @@
 				height: 42px;
 				border: none;
 				border-radius: 10px;
-				background: #ff3b3b;
-				color: white;
+				background: var(--danger);
+				color: #fff;
 				font-size: 18px;
-				cursor: pointer;
 				z-index: 10000;
+				transition: 0.15s;
+			}
+
+			#close:hover {
+				transform: scale(1.05);
+				filter: brightness(1.1);
 			}
 		</style>
 	</head>
 
-	<body>
+	<body data-theme="default">
 		<main class="page">
 			<section class="page-heading">
 				<h1>Games</h1>
+				<input type="text" id="searchBar" placeholder="Search games..." autocomplete="off" />
 			</section>
 
 			<section class="grid" id="grid"></section>
 		</main>
 
-		<!-- OVERLAY -->
 		<div id="overlay">
 			<button id="close">✕</button>
 			<iframe id="frame" allowfullscreen></iframe>
@@ -118,6 +249,7 @@
 			const overlay = document.getElementById("overlay");
 			const frame = document.getElementById("frame");
 			const closeBtn = document.getElementById("close");
+			const searchBar = document.getElementById("searchBar");
 
 			let cache = [];
 
@@ -128,18 +260,19 @@
 
 					cache = await res.json();
 
-					requestAnimationFrame(renderGames);
+					requestAnimationFrame(() => renderGames(cache));
 				} catch (err) {
 					console.error(err);
-					grid.innerHTML = "<p style='color:red'>Failed to load games</p>";
+					grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
 				}
 			}
 
-			function renderGames() {
+			function renderGames(gamesToRender) {
+				grid.innerHTML = ""; 
 				const frag = document.createDocumentFragment();
 
-				for (let i = 0; i < cache.length; i++) {
-					const g = cache[i];
+				for (let i = 0; i < gamesToRender.length; i++) {
+					const g = gamesToRender[i];
 
 					const btn = document.createElement("button");
 					btn.className = "tile";
@@ -157,8 +290,23 @@
 					frag.appendChild(btn);
 				}
 
-				grid.appendChild(frag);
+				if (gamesToRender.length === 0) {
+					grid.innerHTML = `<p style='color:var(--dim)'>No games found.</p>`;
+				} else {
+					grid.appendChild(frag);
+				}
 			}
+
+			searchBar.addEventListener("input", (e) => {
+				const query = e.target.value.toLowerCase().trim();
+				
+				const filteredGames = cache.filter((g) => {
+					const title = g.title ?? "Untitled";
+					return title.toLowerCase().includes(query);
+				});
+
+				renderGames(filteredGames);
+			});
 
 			function openGame(url) {
 				frame.src = url;
