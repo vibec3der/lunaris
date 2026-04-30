@@ -1,6 +1,9 @@
 "use strict";
 
 window.addEventListener("DOMContentLoaded", () => {
+	const theme = localStorage.getItem("lunarisTheme") || "default";
+	document.body.dataset.theme = theme === "default" ? "" : theme;
+
 	if (window.lucide) {
 		window.lucide.createIcons();
 	}

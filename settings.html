@@ -9,7 +9,6 @@
 	<body>
 		<main class="page">
 			<section class="page-heading">
-				<p class="eyebrow">lunaris://settings</p>
 				<h1>Settings</h1>
 			</section>
 
@@ -20,21 +19,59 @@
 				</label>
 				<label class="field">
 					<span>Transport</span>
-					<select class="sj-select">
+					<select id="transport-select">
 						<option value="libcurl">libcurl</option>
 						<option value="epoxy">epoxy</option>
 					</select>
 				</label>
+				<label class="field">
+					<span>Default tab cloak</span>
+					<select id="cloak-select">
+						<option value="none">Lunaris</option>
+						<option value="classroom">Google Classroom</option>
+						<option value="iready">i-Ready</option>
+						<option value="docs">Google Docs</option>
+						<option value="gmail">Gmail</option>
+						<option value="drive">Google Drive</option>
+					</select>
+				</label>
+				<label class="field">
+					<span>Theme</span>
+					<select id="theme-select">
+						<option value="default">Default Lunaris</option>
+						<option value="midnight">Midnight Black</option>
+						<option value="aurora">Aurora</option>
+						<option value="ember">Ember</option>
+					</select>
+				</label>
+				<label class="toggle-row">
+					<span>Force about:blank launch</span>
+					<input id="about-blank-toggle" class="switch-input" type="checkbox" />
+					<span class="switch-shell" aria-hidden="true"></span>
+				</label>
+				<div class="data-actions">
+					<button id="clear-history" type="button">Clear search history</button>
+					<button id="export-data" type="button">Export data</button>
+					<button id="import-data" type="button">Import data</button>
+					<input id="import-file" type="file" accept="application/json,.json" hidden />
+					<button id="wipe-data" class="danger" type="button">Wipe all data</button>
+				</div>
 			</section>
 		</main>
 		<script>
 			const addressInput = document.getElementById("sj-address");
-			const transportSelect = document.querySelector(".sj-select");
+			const transportSelect = document.getElementById("transport-select");
+			const cloakSelect = document.getElementById("cloak-select");
+			const themeSelect = document.getElementById("theme-select");
+			const aboutBlankToggle = document.getElementById("about-blank-toggle");
+			const clearHistoryButton = document.getElementById("clear-history");
+			const exportButton = document.getElementById("export-data");
+			const importButton = document.getElementById("import-data");
+			const importFile = document.getElementById("import-file");
+			const wipeButton = document.getElementById("wipe-data");
 
 			const savedWisp = localStorage.getItem("wispUrl");
-			if (savedWisp) {
-				addressInput.placeholder = savedWisp;
-			}
+			if (savedWisp) addressInput.placeholder = savedWisp;
 
 			let savedTransport = localStorage.getItem("transport");
 			if (savedTransport !== "epoxy" && savedTransport !== "libcurl") {
@@ -43,9 +80,13 @@
 			}
 
 			transportSelect.value = savedTransport;
+			cloakSelect.value = localStorage.getItem("lunarisCloak") || "none";
+			themeSelect.value = localStorage.getItem("lunarisTheme") || "default";
+			aboutBlankToggle.checked = localStorage.getItem("lunarisAutoAboutBlank") === "true";
+			applyTheme();
 
-			addressInput.addEventListener("keydown", function (e) {
-				if (e.key !== "Enter") return;
+			addressInput.addEventListener("keydown", function (event) {
+				if (event.key !== "Enter") return;
 				let value = this.value.trim();
 				if (!value) return;
 
@@ -55,11 +96,212 @@
 				localStorage.setItem("wispUrl", value);
 				this.placeholder = value;
 				this.value = "";
+				notifyParent();
 			});
 
 			transportSelect.addEventListener("change", function () {
 				localStorage.setItem("transport", this.value);
+				notifyParent();
 			});
+
+			cloakSelect.addEventListener("change", function () {
+				localStorage.setItem("lunarisCloak", this.value);
+				notifyParent();
+			});
+
+			themeSelect.addEventListener("change", function () {
+				localStorage.setItem("lunarisTheme", this.value);
+				applyTheme();
+				notifyParent();
+			});
+
+			aboutBlankToggle.addEventListener("change", function () {
+				localStorage.setItem("lunarisAutoAboutBlank", String(this.checked));
+				notifyParent();
+			});
+
+			exportButton.addEventListener("click", exportData);
+			clearHistoryButton.addEventListener("click", function () {
+				localStorage.removeItem("lunarisSearchHistory");
+				notifyParent();
+			});
+			importButton.addEventListener("click", () => importFile.click());
+			importFile.addEventListener("change", importData);
+			wipeButton.addEventListener("click", wipeData);
+
+			function notifyParent() {
+				window.parent.postMessage({ type: "lunaris:data-updated" }, window.location.origin);
+			}
+
+			function applyTheme() {
+				const theme = localStorage.getItem("lunarisTheme") || "default";
+				document.body.dataset.theme = theme === "default" ? "" : theme;
+			}
+
+			async function exportData() {
+				const data = {
+					exportedAt: new Date().toISOString(),
+					localStorage: storageToObject(localStorage),
+					sessionStorage: storageToObject(sessionStorage),
+					cookies: document.cookie,
+					indexedDB: await exportIndexedDB(),
+				};
+				const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+				const link = document.createElement("a");
+				link.href = URL.createObjectURL(blob);
+				link.download = "lunaris-data.json";
+				link.click();
+				URL.revokeObjectURL(link.href);
+			}
+
+			async function importData(event) {
+				const file = event.target.files[0];
+				if (!file) return;
+
+				const data = JSON.parse(await file.text());
+				restoreStorage(localStorage, data.localStorage);
+				restoreStorage(sessionStorage, data.sessionStorage);
+				restoreCookies(data.cookies);
+				await restoreIndexedDB(data.indexedDB);
+				notifyParent();
+				location.reload();
+			}
+
+			async function wipeData() {
+				const approved = confirm("This clears Lunaris settings, history, bookmarks, cookies, caches, service workers, and local databases for this site.");
+				if (!approved) return;
+
+				localStorage.clear();
+				sessionStorage.clear();
+				document.cookie.split(";").forEach((cookie) => {
+					const name = cookie.split("=")[0].trim();
+					if (name) document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+				});
+
+				if ("caches" in window) {
+					const names = await caches.keys();
+					await Promise.all(names.map((name) => caches.delete(name)));
+				}
+
+				if (navigator.serviceWorker) {
+					const registrations = await navigator.serviceWorker.getRegistrations();
+					await Promise.all(registrations.map((registration) => registration.unregister()));
+				}
+
+				await deleteIndexedDB();
+				notifyParent();
+				location.href = "/";
+			}
+
+			function storageToObject(storage) {
+				return Object.fromEntries(Array.from({ length: storage.length }, (_, index) => {
+					const key = storage.key(index);
+					return [key, storage.getItem(key)];
+				}));
+			}
+
+			function restoreStorage(storage, data) {
+				if (!data) return;
+				Object.entries(data).forEach(([key, value]) => storage.setItem(key, value));
+			}
+
+			function restoreCookies(cookies) {
+				if (!cookies) return;
+				cookies.split(";").forEach((cookie) => {
+					const trimmed = cookie.trim();
+					if (trimmed) document.cookie = `${trimmed}; path=/`;
+				});
+			}
+
+			async function exportIndexedDB() {
+				if (!indexedDB.databases) return [];
+				const databases = await indexedDB.databases();
+				const exported = [];
+
+				for (const database of databases) {
+					if (!database.name) continue;
+					const db = await openDatabase(database.name);
+					const stores = {};
+
+					for (const storeName of Array.from(db.objectStoreNames)) {
+						stores[storeName] = await readStore(db, storeName);
+					}
+
+					exported.push({ name: database.name, version: db.version, stores });
+					db.close();
+				}
+
+				return exported;
+			}
+
+			async function restoreIndexedDB(databases) {
+				if (!Array.isArray(databases)) return;
+
+				for (const database of databases) {
+					await new Promise((resolve) => {
+						const deleteRequest = indexedDB.deleteDatabase(database.name);
+						deleteRequest.onsuccess = deleteRequest.onerror = deleteRequest.onblocked = resolve;
+					});
+
+					await new Promise((resolve, reject) => {
+						const request = indexedDB.open(database.name, database.version || 1);
+						request.onupgradeneeded = () => {
+							const db = request.result;
+							Object.keys(database.stores || {}).forEach((storeName) => {
+								if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName, { autoIncrement: true });
+							});
+						};
+						request.onerror = () => reject(request.error);
+						request.onsuccess = async () => {
+							const db = request.result;
+							for (const [storeName, records] of Object.entries(database.stores || {})) {
+								await writeStore(db, storeName, records);
+							}
+							db.close();
+							resolve();
+						};
+					});
+				}
+			}
+
+			async function deleteIndexedDB() {
+				if (!indexedDB.databases) return;
+				const databases = await indexedDB.databases();
+				await Promise.all(databases.map((database) => {
+					return new Promise((resolve) => {
+						if (!database.name) return resolve();
+						const request = indexedDB.deleteDatabase(database.name);
+						request.onsuccess = request.onerror = request.onblocked = resolve;
+					});
+				}));
+			}
+
+			function openDatabase(name) {
+				return new Promise((resolve, reject) => {
+					const request = indexedDB.open(name);
+					request.onerror = () => reject(request.error);
+					request.onsuccess = () => resolve(request.result);
+				});
+			}
+
+			function readStore(db, storeName) {
+				return new Promise((resolve, reject) => {
+					const transaction = db.transaction(storeName, "readonly");
+					const request = transaction.objectStore(storeName).getAll();
+					request.onerror = () => reject(request.error);
+					request.onsuccess = () => resolve(request.result);
+				});
+			}
+
+			function writeStore(db, storeName, records) {
+				return new Promise((resolve, reject) => {
+					const transaction = db.transaction(storeName, "readwrite");
+					const store = transaction.objectStore(storeName);
+					(records || []).forEach((record) => store.add(record));
+					transaction.oncomplete = resolve;
+					transaction.onerror = () => reject(transaction.error);
+				});
+			}
 		</script>
 	</body>
 </html>

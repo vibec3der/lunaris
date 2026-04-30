@@ -44,6 +44,9 @@
 					spellcheck="false"
 					aria-label="Address or search"
 				/>
+				<button id="bookmark-button" class="address-action" type="button" title="Bookmark this page" aria-label="Bookmark this page">
+					<i data-lucide="star"></i>
+				</button>
 				<input id="sj-search-engine" value="https://duckduckgo.com/?q=%s" type="hidden" />
 			</form>
 
@@ -51,17 +54,46 @@
 				<button class="icon-button shortcut" type="button" data-prefix="lunaris://games" title="Games" aria-label="Games">
 					<i data-lucide="gamepad-2"></i>
 				</button>
-				<button class="icon-button shortcut" type="button" data-prefix="lunaris://apps" title="Apps" aria-label="Apps">
+				<button class="icon-button shortcut" type="button" data-prefix="lunaris://ai" title="Edulearn AI" aria-label="Edulearn AI">
 					<i data-lucide="bot"></i>
 				</button>
-				<button class="icon-button shortcut" type="button" data-prefix="lunaris://settings" title="Settings" aria-label="Settings">
-					<i data-lucide="settings"></i>
+				<button class="icon-button shortcut" type="button" data-prefix="lunaris://apps" title="Apps" aria-label="Apps">
+					<i data-lucide="layout-grid"></i>
 				</button>
-				<button class="icon-button shortcut" type="button" data-prefix="lunaris://credits" title="Credits" aria-label="Credits">
+				<button id="fullscreen-button" class="icon-button" type="button" title="Fullscreen frame" aria-label="Fullscreen frame">
+					<i data-lucide="maximize"></i>
+				</button>
+				<button id="menu-button" class="icon-button" type="button" title="Menu" aria-label="Menu" aria-expanded="false">
 					<i data-lucide="ellipsis-vertical"></i>
 				</button>
 			</nav>
 		</header>
+
+		<div id="browser-menu" class="browser-menu" hidden>
+			<button type="button" data-menu-action="settings">
+				<i data-lucide="settings"></i>
+				<span>Settings</span>
+			</button>
+			<button type="button" data-menu-action="eruda">
+				<i data-lucide="bug"></i>
+				<span>Eruda DevTools</span>
+			</button>
+			<button type="button" data-menu-action="tools">
+				<i data-lucide="wrench"></i>
+				<span>Tools</span>
+			</button>
+			<div class="menu-section">
+				<div class="menu-heading">Bookmarks</div>
+				<div id="bookmark-list" class="menu-list"></div>
+			</div>
+			<div class="menu-section">
+				<div class="menu-heading-row">
+					<div class="menu-heading">Search History</div>
+					<button id="clear-history" class="menu-clear" type="button">Clear</button>
+				</div>
+				<div id="history-list" class="menu-list"></div>
+			</div>
+		</div>
 
 		<main id="viewport" class="viewport">
 			<section id="home-view" class="home-view" aria-label="Lunaris homepage">
@@ -76,24 +108,35 @@
 							<i data-lucide="gamepad-2"></i>
 							<span>Games</span>
 						</button>
-						<button type="button" data-prefix="lunaris://apps">
+						<button type="button" data-prefix="lunaris://ai">
 							<i data-lucide="bot"></i>
-							<span>Apps</span>
+							<span>AI</span>
 						</button>
-						<button type="button" data-prefix="lunaris://settings">
-							<i data-lucide="settings"></i>
-							<span>Settings</span>
+						<button type="button" data-prefix="lunaris://apps">
+							<i data-lucide="layout-grid"></i>
+							<span>Apps</span>
 						</button>
 					</div>
 				</div>
 			</section>
 
 			<div id="frame-stage" class="frame-stage" aria-live="polite"></div>
+			<div id="proxy-loader" class="proxy-loader" hidden>
+				<div class="loader-mark"></div>
+				<div class="loader-copy">
+					<strong>Loading proxy</strong>
+					<span id="loader-target">Preparing Lunaris</span>
+				</div>
+			</div>
 
 			<div class="desc">
 				<p id="sj-error"></p>
 				<pre id="sj-error-code"></pre>
 			</div>
+			<nav class="legal-links" aria-label="Legal links">
+				<button type="button" data-prefix="lunaris://privacy">Privacy</button>
+				<button type="button" data-prefix="lunaris://terms">Terms</button>
+			</nav>
 		</main>
 	</body>
 </html>
