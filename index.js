@@ -62,8 +62,8 @@ function boot() {
 	}
 
 	const transport = localStorage.getItem("transport");
-	if (transport !== "epoxy" && transport !== "libcurl") {
-		localStorage.setItem("transport", "libcurl");
+	if (transport !== "libcurl" && transport !== "epoxy") {
+		localStorage.setItem("transport", "epoxy");
 	}
 
 	const controller = $scramjetLoadController();
@@ -290,8 +290,8 @@ async function ensureTransport() {
 	let wispUrl = localStorage.getItem("wispUrl");
 	let transportType = localStorage.getItem("transport");
 
-	if (transportType !== "epoxy" && transportType !== "libcurl") {
-		transportType = "libcurl";
+	if (transportType !== "libcurl" && transportType !== "epoxy") {
+		transportType = "epoxy";
 		localStorage.setItem("transport", transportType);
 	}
 
