@@ -23,6 +23,8 @@ const historyList = document.getElementById("history-list");
 const clearHistoryButton = document.getElementById("clear-history");
 const proxyLoader = document.getElementById("proxy-loader");
 const loaderTarget = document.getElementById("loader-target");
+const DEFAULT_WISP_URL = "wss://wisp.bostoncareercounselor.com/wisp/";
+const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
 
 const internalPages = {
 	"lunaris://home": { title: "Lunaris", path: null, icon: "orbit", documentTitle: "Lunaris" },
@@ -50,11 +52,13 @@ let connection;
 let activeTabId = null;
 let nextTabId = 1;
 let loaderTimer = null;
+let loaderStartedAt = 0;
 const tabs = [];
 
 function boot() {
-	if (!localStorage.getItem("wispUrl")) {
-		localStorage.setItem("wispUrl", "wss://gointospace.app/wisp/");
+	const savedWispUrl = localStorage.getItem("wispUrl");
+	if (!savedWispUrl || savedWispUrl === OLD_DEFAULT_WISP_URL) {
+		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 	}
 
 	const transport = localStorage.getItem("transport");
@@ -248,9 +252,9 @@ async function openWeb(tab, input) {
 	const url = search(input, searchEngine.value);
 	tab.type = "web";
 	tab.address = input;
-	tab.title = titleFromInput(input);
+	tab.title = "Lunaris | Advanced Calculus Courses For High School And Above";
 	tab.icon = "globe";
-	document.title = currentDocumentTitle(`Lunaris: ${tab.title}`);
+	document.title = currentDocumentTitle(); // budda we dont need to know the tab title
 	topAddress.value = input;
 	showProxyLoader(tab.title);
 
@@ -267,7 +271,7 @@ async function openWeb(tab, input) {
 		tab.scramFrame.frame.id = `sj-frame-${tab.id}`;
 		tab.scramFrame.frame.className = "content-frame";
 		tab.scramFrame.frame.allow = "fullscreen";
-		tab.scramFrame.frame.addEventListener("load", hideProxyLoader);
+		tab.scramFrame.frame.addEventListener("load", queueProxyLoaderHide);
 		frameStage.appendChild(tab.scramFrame.frame);
 	}
 
@@ -613,10 +617,18 @@ function clearError() {
 }
 
 function showProxyLoader(target) {
-	loaderTarget.textContent = target ? `Opening ${target}` : "Preparing Lunaris";
+	loaderStartedAt = performance.now();
+	loaderTarget.textContent = target ? `Lunaris is searching for your course.. ${target}` : "Preparing Lunaris";
 	proxyLoader.hidden = false;
 	clearTimeout(loaderTimer);
-	loaderTimer = setTimeout(hideProxyLoader, 9000);
+	loaderTimer = setTimeout(hideProxyLoader, 12000);
+}
+
+function queueProxyLoaderHide() {
+	const elapsed = performance.now() - loaderStartedAt;
+	const remaining = Math.max(1500 - elapsed, 0);
+	clearTimeout(loaderTimer);
+	loaderTimer = setTimeout(hideProxyLoader, remaining);
 }
 
 function hideProxyLoader() {

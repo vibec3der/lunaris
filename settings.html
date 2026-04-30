@@ -15,7 +15,7 @@
 			<section class="settings-panel">
 				<label class="field">
 					<span>Wisp server</span>
-					<input id="sj-address" type="text" placeholder="wss://gointospace.app/wisp/" />
+					<input id="sj-address" type="text" placeholder="wss://wisp.bostoncareercounselor.com/wisp/" />
 				</label>
 				<label class="field">
 					<span>Transport</span>
@@ -69,9 +69,15 @@
 			const importButton = document.getElementById("import-data");
 			const importFile = document.getElementById("import-file");
 			const wipeButton = document.getElementById("wipe-data");
+			const DEFAULT_WISP_URL = "wss://wisp.bostoncareercounselor.com/wisp/";
+			const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
 
-			const savedWisp = localStorage.getItem("wispUrl");
-			if (savedWisp) addressInput.placeholder = savedWisp;
+			let savedWisp = localStorage.getItem("wispUrl");
+			if (!savedWisp || savedWisp === OLD_DEFAULT_WISP_URL) {
+				savedWisp = DEFAULT_WISP_URL;
+				localStorage.setItem("wispUrl", savedWisp);
+			}
+			addressInput.placeholder = savedWisp;
 
 			let savedTransport = localStorage.getItem("transport");
 			if (savedTransport !== "epoxy" && savedTransport !== "libcurl") {

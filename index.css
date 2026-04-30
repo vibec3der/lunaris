@@ -373,14 +373,19 @@ h1 {
 
 .content-frame,
 #sj-frame {
-	display: none;
+	visibility: hidden;
+	opacity: 0;
+	pointer-events: none;
 	border: 0;
 	background: #10111a;
+	transition: opacity 0.16s ease;
 }
 
 .content-frame.active,
 #sj-frame.active {
-	display: block;
+	visibility: visible;
+	opacity: 1;
+	pointer-events: auto;
 }
 
 .desc {
@@ -500,24 +505,67 @@ h1 {
 	position: absolute;
 	inset: 0;
 	z-index: 8;
-	display: grid;
-	place-items: center;
-	gap: 18px;
-	background: color-mix(in srgb, var(--bg) 88%, black 12%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 24px;
+	background:
+		radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--accent) 24%, transparent) 0 1px, transparent 180px),
+		linear-gradient(180deg, color-mix(in srgb, var(--bg) 94%, black 6%), color-mix(in srgb, var(--bg) 82%, black 18%));
 	color: var(--text);
+	backdrop-filter: blur(6px);
 }
 
 .proxy-loader[hidden] {
 	display: none;
 }
 
-.loader-mark {
-	width: 46px;
-	height: 46px;
-	border: 3px solid rgba(255, 255, 255, 0.12);
-	border-top-color: var(--accent);
+.loader-orbit {
+	position: relative;
+	width: 92px;
+	height: 92px;
+}
+
+.loader-orbit::before {
+	content: "";
+	position: absolute;
+	inset: 28px;
 	border-radius: 50%;
-	animation: spin 0.9s linear infinite;
+	background: var(--accent);
+	box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 76%, transparent);
+}
+
+.loader-orbit span {
+	position: absolute;
+	inset: 0;
+	border: 1px solid color-mix(in srgb, var(--accent-soft) 42%, transparent);
+	border-radius: 50%;
+	animation: orbitPulse 1.6s ease-in-out infinite;
+}
+
+.loader-orbit span:nth-child(2) {
+	inset: 11px;
+	animation-delay: 0.18s;
+	transform: rotate(32deg);
+}
+
+.loader-orbit span:nth-child(3) {
+	inset: 22px;
+	animation-delay: 0.36s;
+	transform: rotate(-24deg);
+}
+
+.loader-orbit span::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	right: -4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--text);
+	box-shadow: 0 0 16px var(--accent-soft);
 }
 
 .loader-copy {
@@ -527,7 +575,8 @@ h1 {
 }
 
 .loader-copy strong {
-	font-size: 18px;
+	font-size: 20px;
+	letter-spacing: 0;
 }
 
 .loader-copy span {
@@ -556,9 +605,19 @@ h1 {
 	text-decoration: underline;
 }
 
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
+@keyframes orbitPulse {
+	0% {
+		transform: rotate(0deg) scale(0.96);
+		opacity: 0.48;
+	}
+
+	50% {
+		opacity: 1;
+	}
+
+	100% {
+		transform: rotate(360deg) scale(1.04);
+		opacity: 0.48;
 	}
 }
 
