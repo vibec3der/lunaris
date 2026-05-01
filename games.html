@@ -259,6 +259,19 @@
 			<section class="page-heading">
 				<h1>Games</h1>
 				<div class="controls">
+					<div id="gnmathControls" style="display: none; gap: 12px; align-items: center;">
+						<select id="sortSelect">
+							<option value="name">Name</option>
+							<option value="id">ID (Date)</option>
+							<option value="popular">Popular</option>
+							<option value="trendingDay">Trending (Day)</option>
+							<option value="trendingWeek">Trending (Week)</option>
+							<option value="trendingMonth">Trending (Month)</option>
+						</select>
+						<select id="filterSelect">
+							<option value="all">All Tags</option>
+						</select>
+					</div>
 					<select id="sourceSelect">
 						<option value="ugs">UGS (Default)</option>
 						<option value="gn-math">GN-Math</option>
@@ -266,6 +279,11 @@
 					</select>
 					<input type="text" id="searchBar" placeholder="Search games..." autocomplete="off" />
 				</div>
+			</section>
+
+			<section id="featuredSection" style="display: none; margin-bottom: 32px;">
+				<h2 style="font-size: 24px; margin-bottom: 16px; color: var(--accent);">Featured</h2>
+				<div class="grid" id="featuredGrid"></div>
 			</section>
 
 			<section class="grid" id="grid"></section>
@@ -279,6 +297,11 @@
 
 		<script>
 			const grid = document.getElementById("grid");
+			const featuredGrid = document.getElementById("featuredGrid");
+			const featuredSection = document.getElementById("featuredSection");
+			const gnmathControls = document.getElementById("gnmathControls");
+			const sortSelect = document.getElementById("sortSelect");
+			const filterSelect = document.getElementById("filterSelect");
 			const overlay = document.getElementById("overlay");
 			const frame = document.getElementById("frame");
 			const closeBtn = document.getElementById("close");
@@ -288,25 +311,32 @@
 
 			let cache = [];
 			let luminInitialized = false;
-			const GN_MATH_BASE = "https://cdn.jsdelivr.net/gh/freebuisness/gn-math-DONTDMCA@main/";
+
+			// GN-Math constants
+			const GN_ASSETS_BASE = "https://cdn.jsdelivr.net/gh/freebuisness/assets@main/";
+			const COVER_URL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
+			const HTML_URL = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
+			let popularityData = {};
 
 			// Initialize source
 			const savedSource = localStorage.getItem("lunarisGameSource") || "ugs";
 			sourceSelect.value = savedSource;
 
-			function handleSourceChange() {
+			async function handleSourceChange() {
 				const source = sourceSelect.value;
 				localStorage.setItem("lunarisGameSource", source);
 
 				if (source === "luminsdk") {
 					grid.style.display = "none";
+					featuredSection.style.display = "none";
+					gnmathControls.style.display = "none";
 					searchBar.style.display = "none";
 					luminContainer.style.display = "block";
-					
+
 					if (!luminInitialized && window.Lumin) {
 						Lumin.init({
-							container: '#lumin-container',
-							theme: 'dark'
+							container: "#lumin-container",
+							theme: "dark",
 						});
 						luminInitialized = true;
 					} else if (!window.Lumin) {
@@ -316,18 +346,51 @@
 					grid.style.display = "grid";
 					searchBar.style.display = "block";
 					luminContainer.style.display = "none";
-					loadGames(); // Fetch games for the selected source
+
+					if (source === "gn-math") {
+						gnmathControls.style.display = "flex";
+						featuredSection.style.display = "block";
+					} else {
+						gnmathControls.style.display = "none";
+						featuredSection.style.display = "none";
+					}
+
+					await loadGames();
 				}
 			}
 
 			sourceSelect.addEventListener("change", handleSourceChange);
 
+			async function fetchPopularity(duration) {
+				try {
+					if (!popularityData[duration]) popularityData[duration] = {};
+					const res = await fetch(`https://data.jsdelivr.net/v1/stats/packages/gh/freebuisness/html@main/files?period=${duration}`);
+					const data = await res.json();
+					data.forEach((file) => {
+						const idMatch = file.name.match(/\/(\d+)\.html$/);
+						if (idMatch) {
+							const id = parseInt(idMatch[1]);
+							popularityData[duration][id] = file.hits?.total ?? 0;
+						}
+					});
+				} catch (e) {
+					console.warn("Failed to fetch popularity for " + duration, e);
+				}
+			}
+
+			function toTitleCase(str) {
+				return str.replace(/\w\S*/g, (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase());
+			}
+
 			async function loadGames() {
 				const source = sourceSelect.value;
-				let url = "/UGS.json"; // Use correct case
+				let url = "UGS.json";
 
 				if (source === "gn-math") {
-					url = GN_MATH_BASE + "UGS.json";
+					url = GN_ASSETS_BASE + "zones.json";
+					Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]).then(() => {
+						if (sourceSelect.value === "gn-math") sortAndRender();
+					});
 				}
 
 				try {
@@ -335,28 +398,75 @@
 					if (!res.ok) throw new Error(res.status);
 
 					cache = await res.json();
-					renderGames(cache);
+
+					if (source === "gn-math") {
+						let tags = new Set();
+						cache.forEach((z) => {
+							if (z.special) z.special.forEach((t) => tags.add(t));
+						});
+						filterSelect.innerHTML = '<option value="all">All Tags</option>';
+						Array.from(tags)
+							.sort()
+							.forEach((t) => {
+								const opt = document.createElement("option");
+								opt.value = t;
+								opt.textContent = toTitleCase(t);
+								filterSelect.appendChild(opt);
+							});
+					}
+
+					sortAndRender();
 				} catch (err) {
 					console.error("Failed to load games from " + url, err);
-					// Fallback to local UGS if GN-Math fails
-					if (source === "gn-math") {
-						console.log("Falling back to local UGS.json");
-						try {
-							const res = await fetch("/UGS.json");
-							cache = await res.json();
-							renderGames(cache);
-						} catch (localErr) {
-							grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
-						}
-					} else {
-						grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
-					}
+					grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
 				}
 			}
 
-			function renderGames(gamesToRender) {
-				grid.innerHTML = ""; 
+			function sortAndRender() {
+				const source = sourceSelect.value;
+				let filtered = [...cache];
+
+				const query = searchBar.value.toLowerCase().trim();
+				if (query) {
+					filtered = filtered.filter((g) => (g.title || g.name || "Untitled").toLowerCase().includes(query));
+				}
+
+				if (source === "gn-math") {
+					const tag = filterSelect.value;
+					if (tag !== "all") {
+						filtered = filtered.filter((g) => g.special && g.special.includes(tag));
+					}
+
+					const sortBy = sortSelect.value;
+					if (sortBy === "name") {
+						filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+					} else if (sortBy === "id") {
+						filtered.sort((a, b) => (a.id || 0) - (b.id || 0));
+					} else if (sortBy === "popular") {
+						filtered.sort((a, b) => (popularityData.year?.[b.id] || 0) - (popularityData.year?.[a.id] || 0));
+					} else if (sortBy.startsWith("trending")) {
+						const period = sortBy.replace("trending", "").toLowerCase();
+						filtered.sort((a, b) => (popularityData[period]?.[b.id] || 0) - (popularityData[period]?.[a.id] || 0));
+					}
+
+					filtered.sort((a, b) => (a.id === -1 ? -1 : b.id === -1 ? 1 : 0));
+
+					const featured = filtered.filter((z) => z.featured);
+					renderGames(featured, featuredGrid);
+					renderGames(filtered, grid);
+				} else {
+					renderGames(filtered, grid);
+				}
+			}
+
+			sortSelect.addEventListener("change", sortAndRender);
+			filterSelect.addEventListener("change", sortAndRender);
+			searchBar.addEventListener("input", sortAndRender);
+
+			function renderGames(gamesToRender, targetGrid) {
+				targetGrid.innerHTML = "";
 				const frag = document.createDocumentFragment();
+				const source = sourceSelect.value;
 
 				for (let i = 0; i < gamesToRender.length; i++) {
 					const g = gamesToRender[i];
@@ -364,46 +474,63 @@
 					const btn = document.createElement("button");
 					btn.className = "tile";
 
-					const title = g.title ?? "Untitled";
-					const img = g.image ?? "";
+					const title = g.title ?? g.name ?? "Untitled";
+					let img = g.image ?? g.cover ?? "";
+
+					if (source === "gn-math") {
+						img = img.replace("{COVER_URL}", COVER_URL).replace("{HTML_URL}", HTML_URL);
+					}
 
 					btn.innerHTML = `
 						<img src="${img}" loading="lazy" decoding="async" />
 						<span>${title}</span>
 					`;
 
-					btn.onclick = () => openGame(g.url);
+					btn.onclick = () => openGame(g);
 
 					frag.appendChild(btn);
 				}
 
 				if (gamesToRender.length === 0) {
-					grid.innerHTML = `<p style='color:var(--dim)'>No games found.</p>`;
+					targetGrid.innerHTML = `<p style='color:var(--dim)'>No games found.</p>`;
 				} else {
-					grid.appendChild(frag);
+					targetGrid.appendChild(frag);
 				}
 			}
 
-			searchBar.addEventListener("input", (e) => {
-				const query = e.target.value.toLowerCase().trim();
-				
-				const filteredGames = cache.filter((g) => {
-					const title = g.title ?? "Untitled";
-					return title.toLowerCase().includes(query);
-				});
-
-				renderGames(filteredGames);
-			});
-
-			function openGame(url) {
-				let finalUrl = url;
+			async function openGame(g) {
+				let url = g.url;
 				const source = sourceSelect.value;
-				
-				if (source === "gn-math" && url.startsWith("/")) {
-					finalUrl = GN_MATH_BASE + url.substring(1);
+
+				if (source === "gn-math") {
+					if (url.startsWith("http")) {
+						window.open(url, "_blank");
+						return;
+					}
+
+					url = url.replace("{COVER_URL}", COVER_URL).replace("{HTML_URL}", HTML_URL);
+					try {
+						const res = await fetch(url + "?t=" + Date.now());
+						if (!res.ok) throw new Error(res.status);
+						const html = await res.text();
+
+						overlay.style.display = "block";
+						frame.src = "about:blank";
+
+						const doc = frame.contentWindow.document;
+						doc.open();
+						doc.write(html);
+						doc.close();
+						return;
+					} catch (e) {
+						console.error("Failed to load zone", e);
+						frame.src = url;
+						overlay.style.display = "block";
+						return;
+					}
 				}
 
-				frame.src = finalUrl;
+				frame.src = url;
 				overlay.style.display = "block";
 			}
 
@@ -414,7 +541,6 @@
 
 			closeBtn.onclick = closeGame;
 
-			// Start the boot sequence
 			handleSourceChange();
 		</script>
 	</body>
