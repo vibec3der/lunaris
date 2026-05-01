@@ -16,7 +16,7 @@
 				<label class="field">
 					<span>Wisp server</span>
 					<div class="input-row">
-						<input id="sj-address" type="text" placeholder="wss://wisp.frostcatcher.com/wisp/" />
+						<input id="sj-address" type="text" placeholder="wss://wisp-name/wisp/" />
 						<button id="reset-wisp" type="button" class="small-button">Reset</button>
 					</div>
 				</label>
@@ -87,8 +87,8 @@
 			const importFile = document.getElementById("import-file");
 			const wipeButton = document.getElementById("wipe-data");
 			const resetWispButton = document.getElementById("reset-wisp");
-			const DEFAULT_WISP_URL = "wss://wisp.frostcatcher.com/wisp/";
-			const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
+			const DEFAULT_WISP_URL = "wss://algebramasters.online/wisp/";
+			const OLD_DEFAULT_WISP_URL = "wss://chempioneers.online/wisp/";
 
 			let savedWisp = localStorage.getItem("wispUrl");
 			if (!savedWisp || savedWisp === OLD_DEFAULT_WISP_URL) {

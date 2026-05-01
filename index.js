@@ -25,8 +25,8 @@ const clearHistoryButton = document.getElementById("clear-history");
 const proxyLoader = document.getElementById("proxy-loader");
 const loadingBar = document.getElementById("loading-bar");
 const loaderTarget = document.getElementById("loader-target");
-const DEFAULT_WISP_URL = "wss://wisp.frostcatcher.com/wisp/";
-const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
+const DEFAULT_WISP_URL = "wss://algebramasters.online/wisp/";
+const OLD_DEFAULT_WISP_URL = "wss://chempioneers.online/wisp/";
 
 const internalPages = {
 	"lunaris://home": { title: "Lunaris", path: null, icon: "orbit", documentTitle: "Lunaris" },
