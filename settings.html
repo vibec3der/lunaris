@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
 		<title>Lunaris | Settings</title>
 		<link rel="stylesheet" href="page.css" />
-		<script src="wisps.js"></script>
 	</head>
 	<body>
 		<main class="page">
@@ -17,8 +16,7 @@
 				<label class="field">
 					<span>Wisp server</span>
 					<div class="input-row">
-						<select id="wisp-select"></select>
-						<input id="sj-address" type="text" placeholder="wss://..." style="display: none;" />
+						<input id="sj-address" type="text" placeholder="wss://wisp.frostcatcher.com/wisp/" />
 						<button id="reset-wisp" type="button" class="small-button">Reset</button>
 					</div>
 				</label>
@@ -78,7 +76,6 @@
 		</main>
 		<script>
 			const addressInput = document.getElementById("sj-address");
-			const wispSelect = document.getElementById("wisp-select");
 			const transportSelect = document.getElementById("transport-select");
 			const cloakSelect = document.getElementById("cloak-select");
 			const themeSelect = document.getElementById("theme-select");
@@ -90,19 +87,7 @@
 			const importFile = document.getElementById("import-file");
 			const wipeButton = document.getElementById("wipe-data");
 			const resetWispButton = document.getElementById("reset-wisp");
-
-			// Populate wisp dropdown
-			__WISPS.forEach((wisp) => {
-				const option = document.createElement("option");
-				option.value = wisp.url;
-				option.textContent = wisp.name;
-				wispSelect.appendChild(option);
-			});
-			const customOption = document.createElement("option");
-			customOption.value = "custom";
-			customOption.textContent = "Custom";
-			wispSelect.appendChild(customOption);
-
+			const DEFAULT_WISP_URL = "wss://wisp.frostcatcher.com/wisp/";
 			const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
 
 			let savedWisp = localStorage.getItem("wispUrl");
@@ -110,47 +95,40 @@
 				savedWisp = DEFAULT_WISP_URL;
 				localStorage.setItem("wispUrl", savedWisp);
 			}
+			addressInput.placeholder = savedWisp;
 
-			function updateWispUI() {
-				const isPredefined = __WISPS.some((w) => w.url === savedWisp);
-				if (isPredefined) {
-					wispSelect.value = savedWisp;
-					addressInput.style.display = "none";
-				} else {
-					wispSelect.value = "custom";
-					addressInput.style.display = "block";
-					addressInput.value = savedWisp;
-				}
+			let savedTransport = localStorage.getItem("transport");
+			if (savedTransport !== "libcurl" && savedTransport !== "epoxy") {
+				savedTransport = "epoxy";
+				localStorage.setItem("transport", savedTransport);
 			}
-			updateWispUI();
 
-			wispSelect.addEventListener("change", function () {
-				if (this.value === "custom") {
-					addressInput.style.display = "block";
-					addressInput.focus();
-				} else {
-					addressInput.style.display = "none";
-					localStorage.setItem("wispUrl", this.value);
-					notifyParent();
-					location.reload();
-				}
-			});
+			transportSelect.value = savedTransport;
+			cloakSelect.value = localStorage.getItem("lunarisCloak") || "none";
+			themeSelect.value = localStorage.getItem("lunarisTheme") || "default";
+			searchEngineSelect.value = localStorage.getItem("lunarisSearchEngine") || "https://duckduckgo.com/?q=%s";
+			aboutBlankToggle.checked = localStorage.getItem("lunarisAutoAboutBlank") === "true";
+			applyTheme();
 
 			addressInput.addEventListener("keydown", function (event) {
 				if (event.key !== "Enter") return;
 				let value = this.value.trim();
 				if (!value) return;
 
-				if (!value.startsWith("ws://") && !value.startsWith("wss://")) value = "wss://" + value;
+				if (!value.startsWith("wss://")) value = "wss://" + value;
 				if (!value.endsWith("/")) value += "/";
 
 				localStorage.setItem("wispUrl", value);
+				this.placeholder = value;
+				this.value = "";
 				notifyParent();
 				location.reload();
 			});
 
 			resetWispButton.addEventListener("click", function () {
 				localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
+				addressInput.placeholder = DEFAULT_WISP_URL;
+				addressInput.value = "";
 				notifyParent();
 				location.reload();
 			});
