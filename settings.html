@@ -15,7 +15,10 @@
 			<section class="settings-panel">
 				<label class="field">
 					<span>Wisp server</span>
-					<input id="sj-address" type="text" placeholder="wss://wisp.bostoncareercounselor.com/wisp/" />
+					<div class="input-row">
+						<input id="sj-address" type="text" placeholder="wss://wisp.frostcatcher.com/wisp/" />
+						<button id="reset-wisp" type="button" class="small-button">Reset</button>
+					</div>
 				</label>
 				<label class="field">
 					<span>Transport</span>
@@ -44,6 +47,19 @@
 						<option value="ember">Ember</option>
 					</select>
 				</label>
+				<label class="field">
+					<span>Search engine</span>
+					<select id="search-engine-select">
+						<option value="https://duckduckgo.com/?q=%s">DuckDuckGo</option>
+						<option value="https://search.brave.com/search?q=%s">Brave</option>
+						<option value="https://www.startpage.com/do/search?query=%s">Startpage</option>
+						<option value="https://www.google.com/search?q=%s">Google</option>
+						<option value="https://www.bing.com/search?q=%s">Bing</option>
+						<option value="https://search.yahoo.com/search?p=%s">Yahoo</option>
+						<option value="https://yandex.com/search/?text=%s">Yandex</option>
+						<option value="https://www.ecosia.org/search?q=%s">Ecosia</option>
+					</select>
+				</label>
 				<label class="toggle-row">
 					<span>Force about:blank launch</span>
 					<input id="about-blank-toggle" class="switch-input" type="checkbox" />
@@ -63,13 +79,15 @@
 			const transportSelect = document.getElementById("transport-select");
 			const cloakSelect = document.getElementById("cloak-select");
 			const themeSelect = document.getElementById("theme-select");
+			const searchEngineSelect = document.getElementById("search-engine-select");
 			const aboutBlankToggle = document.getElementById("about-blank-toggle");
 			const clearHistoryButton = document.getElementById("clear-history");
 			const exportButton = document.getElementById("export-data");
 			const importButton = document.getElementById("import-data");
 			const importFile = document.getElementById("import-file");
 			const wipeButton = document.getElementById("wipe-data");
-			const DEFAULT_WISP_URL = "wss://wisp.bostoncareercounselor.com/wisp/";
+			const resetWispButton = document.getElementById("reset-wisp");
+			const DEFAULT_WISP_URL = "wss://wisp.frostcatcher.com/wisp/";
 			const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
 
 			let savedWisp = localStorage.getItem("wispUrl");
@@ -88,6 +106,7 @@
 			transportSelect.value = savedTransport;
 			cloakSelect.value = localStorage.getItem("lunarisCloak") || "none";
 			themeSelect.value = localStorage.getItem("lunarisTheme") || "default";
+			searchEngineSelect.value = localStorage.getItem("lunarisSearchEngine") || "https://duckduckgo.com/?q=%s";
 			aboutBlankToggle.checked = localStorage.getItem("lunarisAutoAboutBlank") === "true";
 			applyTheme();
 
@@ -103,6 +122,15 @@
 				this.placeholder = value;
 				this.value = "";
 				notifyParent();
+				location.reload();
+			});
+
+			resetWispButton.addEventListener("click", function () {
+				localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
+				addressInput.placeholder = DEFAULT_WISP_URL;
+				addressInput.value = "";
+				notifyParent();
+				location.reload();
 			});
 
 			transportSelect.addEventListener("change", function () {
@@ -119,6 +147,12 @@
 				localStorage.setItem("lunarisTheme", this.value);
 				applyTheme();
 				notifyParent();
+			});
+
+			searchEngineSelect.addEventListener("change", function () {
+				localStorage.setItem("lunarisSearchEngine", this.value);
+				notifyParent();
+				location.reload();
 			});
 
 			aboutBlankToggle.addEventListener("change", function () {

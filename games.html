@@ -5,6 +5,8 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Lunaris | Games</title>
 
+		<link rel="stylesheet" href="page.css" />
+		<script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js" defer></script>
 		<style>
 			/* --- THEME VARIABLES & CURSOR --- */
 			:root {
@@ -112,14 +114,24 @@
 				justify-content: space-between;
 				align-items: center;
 				margin-bottom: 24px;
+				gap: 16px;
+				flex-wrap: wrap;
 			}
 
 			.page-heading h1 {
 				margin: 0;
 				font-size: 32px;
 				color: var(--text);
+				flex: 1;
 			}
 
+			.controls {
+				display: flex;
+				gap: 12px;
+				align-items: center;
+			}
+
+			#sourceSelect,
 			#searchBar {
 				padding: 10px 16px;
 				border-radius: 20px;
@@ -129,10 +141,23 @@
 				outline: none;
 				font-size: 14px;
 				transition: 0.2s;
+			}
+
+			#sourceSelect {
+				appearance: none;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: right 12px center;
+				padding-right: 36px;
+				min-width: 140px;
+			}
+
+			#searchBar {
 				width: 100%;
 				max-width: 250px;
 			}
 
+			#sourceSelect:focus,
 			#searchBar:focus {
 				border-color: var(--accent);
 				background: var(--field-focus);
@@ -233,10 +258,18 @@
 		<main class="page">
 			<section class="page-heading">
 				<h1>Games</h1>
-				<input type="text" id="searchBar" placeholder="Search games..." autocomplete="off" />
+				<div class="controls">
+					<select id="sourceSelect">
+						<option value="ugs">UGS (Default)</option>
+						<option value="gn-math">GN-Math</option>
+						<option value="luminsdk">LuminSDK</option>
+					</select>
+					<input type="text" id="searchBar" placeholder="Search games..." autocomplete="off" />
+				</div>
 			</section>
 
 			<section class="grid" id="grid"></section>
+			<div id="lumin-container" style="display:none;"></div>
 		</main>
 
 		<div id="overlay">
@@ -250,8 +283,45 @@
 			const frame = document.getElementById("frame");
 			const closeBtn = document.getElementById("close");
 			const searchBar = document.getElementById("searchBar");
+			const sourceSelect = document.getElementById("sourceSelect");
+			const luminContainer = document.getElementById("lumin-container");
 
 			let cache = [];
+			let luminInitialized = false;
+			const GN_MATH_BASE = "https://cdn.jsdelivr.net/gh/freebuisness/gn-math-DONTDMCA@main/";
+
+			// Initialize source
+			const savedSource = localStorage.getItem("lunarisGameSource") || "ugs";
+			sourceSelect.value = savedSource;
+
+			function handleSourceChange() {
+				const source = sourceSelect.value;
+				localStorage.setItem("lunarisGameSource", source);
+
+				if (source === "luminsdk") {
+					grid.style.display = "none";
+					searchBar.style.display = "none";
+					luminContainer.style.display = "block";
+					
+					if (!luminInitialized && window.Lumin) {
+						Lumin.init({
+							container: '#lumin-container',
+							theme: 'dark'
+						});
+						luminInitialized = true;
+					} else if (!window.Lumin) {
+						// Retry in case script is still loading
+						setTimeout(handleSourceChange, 500);
+					}
+				} else {
+					grid.style.display = "grid";
+					searchBar.style.display = "block";
+					luminContainer.style.display = "none";
+					renderGames(cache);
+				}
+			}
+
+			sourceSelect.addEventListener("change", handleSourceChange);
 
 			async function loadGames() {
 				try {
@@ -260,7 +330,10 @@
 
 					cache = await res.json();
 
-					requestAnimationFrame(() => renderGames(cache));
+					requestAnimationFrame(() => {
+						renderGames(cache);
+						handleSourceChange(); // Apply initial source state
+					});
 				} catch (err) {
 					console.error(err);
 					grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
@@ -309,7 +382,15 @@
 			});
 
 			function openGame(url) {
-				frame.src = url;
+				let finalUrl = url;
+				const source = sourceSelect.value;
+				
+				if (source === "gn-math" && url.startsWith("/")) {
+					// Prepend CDN base, removing the leading slash from url to avoid double slash
+					finalUrl = GN_MATH_BASE + url.substring(1);
+				}
+
+				frame.src = finalUrl;
 				overlay.style.display = "block";
 			}
 

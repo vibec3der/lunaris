@@ -19,4 +19,16 @@ window.addEventListener("DOMContentLoaded", () => {
 			);
 		});
 	});
+
+	document.querySelectorAll("[data-lunaris-path]").forEach((button) => {
+		button.addEventListener("click", () => {
+			window.parent.postMessage(
+				{
+					type: "lunaris:navigate",
+					address: button.dataset.lunarisPath,
+				},
+				window.location.origin,
+			);
+		});
+	});
 });

@@ -1396,8 +1396,13 @@
     },
     {
         "title": "Celeste",
-        "url": "/g2games/clceleste.html",
+        "url": "/g2games/celeste.html",
         "image": "https://dummyimage.com/200x150/cccccc/000000&text=Celeste"
+    },
+    {
+        "title": "Celeste PICO",
+        "url": "/g2games/clceleste.html",
+        "image": "https://dummyimage.com/200x150/cccccc/000000&text=Celeste PICO"
     },
     {
         "title": "Celeste 2",

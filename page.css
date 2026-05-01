@@ -228,3 +228,23 @@ a {
 	border: 1px solid rgba(255, 125, 141, 0.55);
 	color: var(--danger);
 }
+
+.input-row {
+	display: flex;
+	gap: 8px;
+}
+
+.small-button {
+	flex: 0 0 auto;
+	width: auto;
+	padding: 0 20px;
+	border-radius: 8px;
+	background: var(--panel);
+	color: var(--text);
+	border: 1px solid var(--line);
+}
+
+.small-button:hover {
+	background: var(--panel-hover);
+	border-color: var(--accent);
+}
