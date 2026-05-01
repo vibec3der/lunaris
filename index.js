@@ -22,8 +22,9 @@ const bookmarkList = document.getElementById("bookmark-list");
 const historyList = document.getElementById("history-list");
 const clearHistoryButton = document.getElementById("clear-history");
 const proxyLoader = document.getElementById("proxy-loader");
+const loadingBar = document.getElementById("loading-bar");
 const loaderTarget = document.getElementById("loader-target");
-const DEFAULT_WISP_URL = "wss://wisp.bostoncareercounselor.com/wisp/";
+const DEFAULT_WISP_URL = "wss://wisp.mercurywork.shop";
 const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
 
 const internalPages = {
@@ -298,8 +299,9 @@ async function ensureTransport() {
 	const transportPath = transportType === "epoxy" ? "/epoxy/index.mjs" : "/libcurl/index.mjs";
 	const transportConfig = transportType === "epoxy" ? [{ wisp: wispUrl }] : [{ websocket: wispUrl }];
 
-	if ((await connection.getTransport()) !== transportPath) {
+	if ((await connection.getTransport()) !== transportPath || localStorage.getItem("lunarisLastWisp") !== wispUrl) {
 		await connection.setTransport(transportPath, transportConfig);
+		localStorage.setItem("lunarisLastWisp", wispUrl);
 	}
 }
 
@@ -366,7 +368,9 @@ function setActiveView() {
 	const tab = getActiveTab();
 	if (!tab) return;
 
-	topAddress.value = tab.address;
+	if (document.activeElement !== topAddress) {
+		topAddress.value = tab.address;
+	}
 	homeAddress.value = "";
 	homeView.classList.toggle("hidden", tab.type !== "home");
 	frameStage.classList.toggle("active", tab.type !== "home");
@@ -618,21 +622,50 @@ function clearError() {
 
 function showProxyLoader(target) {
 	loaderStartedAt = performance.now();
+	if (loadingBar) {
+		loadingBar.classList.add("active");
+		loadingBar.style.width = "0%";
+		setTimeout(() => {
+			if (loadingBar.classList.contains("active")) {
+				loadingBar.style.width = "30%";
+			}
+		}, 10);
+		setTimeout(() => {
+			if (loadingBar.classList.contains("active")) {
+				loadingBar.style.width = "60%";
+			}
+		}, 400);
+		setTimeout(() => {
+			if (loadingBar.classList.contains("active")) {
+				loadingBar.style.width = "85%";
+			}
+		}, 800);
+	}
+
 	loaderTarget.textContent = target ? "Lunaris is searching for your course.. (sorry for slop loading)" : "Preparing..";
 	proxyLoader.hidden = false;
 	clearTimeout(loaderTimer);
-	loaderTimer = setTimeout(hideProxyLoader, 12000);
+	loaderTimer = setTimeout(hideProxyLoader, 15000);
 }
 
 function queueProxyLoaderHide() {
 	const elapsed = performance.now() - loaderStartedAt;
-	const remaining = Math.max(1500 - elapsed, 0);
+	const remaining = Math.max(1000 - elapsed, 0);
 	clearTimeout(loaderTimer);
 	loaderTimer = setTimeout(hideProxyLoader, remaining);
 }
 
 function hideProxyLoader() {
 	clearTimeout(loaderTimer);
+	if (loadingBar) {
+		loadingBar.style.width = "100%";
+		setTimeout(() => {
+			loadingBar.classList.remove("active");
+			setTimeout(() => {
+				loadingBar.style.width = "0%";
+			}, 300);
+		}, 300);
+	}
 	proxyLoader.hidden = true;
 }
 

@@ -501,20 +501,26 @@ h1 {
 	white-space: pre-wrap;
 }
 
+.loading-bar {
+	position: fixed;
+	top: 124px;
+	left: 0;
+	z-index: 100;
+	width: 0%;
+	height: 3px;
+	background: var(--accent);
+	box-shadow: 0 0 8px var(--accent);
+	transition: width 0.4s cubic-bezier(0.1, 0.7, 0.1, 1), opacity 0.3s ease;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.loading-bar.active {
+	opacity: 1;
+}
+
 .proxy-loader {
-	position: absolute;
-	inset: 0;
-	z-index: 8;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 24px;
-	background:
-		radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--accent) 24%, transparent) 0 1px, transparent 180px),
-		linear-gradient(180deg, color-mix(in srgb, var(--bg) 94%, black 6%), color-mix(in srgb, var(--bg) 82%, black 18%));
-	color: var(--text);
-	backdrop-filter: blur(6px);
+	display: none; /* Hide the old loader */
 }
 
 .proxy-loader[hidden] {
