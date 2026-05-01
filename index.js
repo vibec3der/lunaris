@@ -25,8 +25,9 @@ const clearHistoryButton = document.getElementById("clear-history");
 const proxyLoader = document.getElementById("proxy-loader");
 const loadingBar = document.getElementById("loading-bar");
 const loaderTarget = document.getElementById("loader-target");
-const DEFAULT_WISP_URL = "wss://wisp.frostcatcher.com/wisp/";
-const OLD_DEFAULT_WISP_URL = "wss://gointospace.app/wisp/";
+
+// Use the default wisp from wisps.js if available, otherwise fallback to a placeholder
+const DEFAULT_WISP_URL = typeof __WISPS !== "undefined" && __WISPS.length > 0 ? __WISPS[0].url : "wss://fallback.wisp.com/wisp/";
 
 const internalPages = {
 	"lunaris://home": { title: "Lunaris", path: null, icon: "orbit", documentTitle: "Lunaris" },
@@ -467,7 +468,8 @@ const tabs = [];
 
 function boot() {
 	const savedWispUrl = localStorage.getItem("wispUrl");
-	if (!savedWispUrl || savedWispUrl === OLD_DEFAULT_WISP_URL) {
+	// If no saved URL or it's an old default, set to the new default from wisps.js
+	if (!savedWispUrl) {
 		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 	}
 
