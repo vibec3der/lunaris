@@ -579,6 +579,7 @@ function addTab(address) {
 
 	tabs.push(tab);
 	activeTabId = tab.id;
+	setRandomQuote();
 	navigate(tab, address, true);
 	renderTabs();
 	setActiveView();
@@ -624,6 +625,7 @@ async function navigate(tab, rawInput, pushHistory) {
 
 	if (prefix) {
 		hideProxyLoader();
+		if (prefix === "lunaris://home") setRandomQuote();
 		openInternal(tab, prefix);
 	} else {
 		await openWeb(tab, input);

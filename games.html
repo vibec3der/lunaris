@@ -310,33 +310,47 @@
 						});
 						luminInitialized = true;
 					} else if (!window.Lumin) {
-						// Retry in case script is still loading
 						setTimeout(handleSourceChange, 500);
 					}
 				} else {
 					grid.style.display = "grid";
 					searchBar.style.display = "block";
 					luminContainer.style.display = "none";
-					renderGames(cache);
+					loadGames(); // Fetch games for the selected source
 				}
 			}
 
 			sourceSelect.addEventListener("change", handleSourceChange);
 
 			async function loadGames() {
+				const source = sourceSelect.value;
+				let url = "/UGS.json"; // Use correct case
+
+				if (source === "gn-math") {
+					url = GN_MATH_BASE + "UGS.json";
+				}
+
 				try {
-					const res = await fetch("/ugs.json", { cache: "force-cache" });
+					const res = await fetch(url);
 					if (!res.ok) throw new Error(res.status);
 
 					cache = await res.json();
-
-					requestAnimationFrame(() => {
-						renderGames(cache);
-						handleSourceChange(); // Apply initial source state
-					});
+					renderGames(cache);
 				} catch (err) {
-					console.error(err);
-					grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
+					console.error("Failed to load games from " + url, err);
+					// Fallback to local UGS if GN-Math fails
+					if (source === "gn-math") {
+						console.log("Falling back to local UGS.json");
+						try {
+							const res = await fetch("/UGS.json");
+							cache = await res.json();
+							renderGames(cache);
+						} catch (localErr) {
+							grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
+						}
+					} else {
+						grid.innerHTML = `<p style='color:var(--danger)'>Failed to load games</p>`;
+					}
 				}
 			}
 
@@ -386,7 +400,6 @@
 				const source = sourceSelect.value;
 				
 				if (source === "gn-math" && url.startsWith("/")) {
-					// Prepend CDN base, removing the leading slash from url to avoid double slash
 					finalUrl = GN_MATH_BASE + url.substring(1);
 				}
 
@@ -401,7 +414,8 @@
 
 			closeBtn.onclick = closeGame;
 
-			loadGames();
+			// Start the boot sequence
+			handleSourceChange();
 		</script>
 	</body>
 </html>
